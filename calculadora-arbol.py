@@ -22,7 +22,7 @@ def fmt(n):
     return str(int(n)) if n == int(n) else f"{n:.10g}"
 
 
-# ---------------------------------------------------------------- PILA
+# PILA____________________________________________________________
 class Pila:
     """Pila (LIFO): push, pop y tope en O(1)."""
     def __init__(self):
@@ -43,7 +43,7 @@ class Pila:
         return not self.items
 
 
-# ---------------------------------------------------------------- ÁRBOL
+# ÁRBOL____________________________________________________________
 class Nodo:
     """Nodo interno: operador (str) con dos hijos. Hoja: número (float)."""
     def __init__(self, valor, izq=None, der=None):
