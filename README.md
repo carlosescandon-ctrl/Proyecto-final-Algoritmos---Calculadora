@@ -1,14 +1,14 @@
 # Calculadora Básica con Árbol de Expresión
 
-**Curso:** Estructuras de Datos y Algoritmos
+**Curso:** Estructuras de Datos – 
 **Batería 3 – Ejercicio 2**
 
 ## Integrantes
 
-| N.º | Calculadora Básica con Árbol de Expresión |
+| N.º | Nombre completo |
 |-----|-----------------|
-| 1   | Escandon Inga Carlos Anthony |
-| 2   | Lazaro Cortez Valeria Rubi |
+| 1   | _Escandon Inga Carlos Anthony_ |
+| 2   |  _Lazaro Cortez Valeria Rubi_  |
 
 ---
 
@@ -25,7 +25,7 @@ Este proyecto implementa una calculadora en Python que:
 - Maneja errores (**división por cero** y **sintaxis incorrecta**).
 - Guarda un **historial de las últimas 10 expresiones** evaluadas.
 
-Restricción del trabajo: no se usan librerías externas para las estructuras de datos; todas son propias.
+Restricción del trabajo: no se usan librerías externas para las estructuras de datos; el árbol, los nodos y la pila son clases propias.
 
 Ejemplo del enunciado, `3 + 4 * 2`:
 
@@ -71,38 +71,32 @@ Para `3 + 4 * 2` el árbol es:
       4   2
 ```
 
-### 2.2 Estructuras auxiliares (también hechas desde cero)
+### 2.2 Estructuras auxiliares
 
 | Estructura | Uso en el proyecto |
 |------------|--------------------|
-| **Pila** (lista enlazada) | Convertir infija a árbol: una pila de operadores y otra de subárboles. |
-| **Cola** (lista enlazada) | Guardar los tokens (números, operadores, paréntesis) en orden de lectura. |
-| **Lista enlazada** (`Historial`) | Guardar las últimas 10 expresiones con su resultado. |
+| **Pila** (clase propia `Pila`) | Convertir infija a árbol: una pila de operadores y otra de subárboles. |
+| **Lista de Python** (`historial`) | Guardar las últimas 10 expresiones con su resultado (la más reciente primero). |
 
 ```python
-class NodoLista:
-    def __init__(self, dato, siguiente=None):
-        self.dato = dato
-        self.siguiente = siguiente
-
-
 class Pila:
-    """Pila (LIFO) enlazada. push/pop/tope en O(1)."""
+    """Pila (LIFO): push, pop y tope en O(1)."""
     def __init__(self):
-        self._tope = None
-        self._tamano = 0
+        self.items = []
 
-    def push(self, dato):
-        self._tope = NodoLista(dato, self._tope)
-        self._tamano += 1
+    def push(self, x):
+        self.items.append(x)
 
     def pop(self):
-        if self.esta_vacia():
+        if not self.items:
             raise ErrorSintaxis("Expresión incompleta (faltan operandos).")
-        dato = self._tope.dato
-        self._tope = self._tope.siguiente
-        self._tamano -= 1
-        return dato
+        return self.items.pop()
+
+    def tope(self):
+        return self.items[-1] if self.items else None
+
+    def vacia(self):
+        return not self.items
 ```
 
 ### 2.3 Precedencia
@@ -117,29 +111,27 @@ La resta y la división se asocian de izquierda a derecha (`10 - 4 - 3 = 3`), mi
 
 ## 3. Descripción de las operaciones implementadas
 
-### 3.1 Tokenización (`_tokenizar`)
-Recorre el texto carácter por carácter y encola tokens `(tipo, valor)`. Reconoce números enteros y decimales, el signo `-` unario pegado a un número (`-3 + 5`), operadores y paréntesis. Cualquier otro carácter genera `ErrorSintaxis`.
+### 3.1 Tokenización (`tokenizar`)
+Recorre el texto carácter por carácter y devuelve una lista de tokens (números, operadores y paréntesis). Reconoce números enteros y decimales, el signo `-` unario pegado a un número (`-3 + 5`), operadores y paréntesis. Cualquier otro carácter genera `ErrorSintaxis`.
 
 ### 3.2 Construcción del árbol (`construir`)
 Usa el algoritmo de las dos pilas (variante de *Shunting-Yard*). Cada vez que un operador debe "cerrarse", se saca de la pila de operadores, se sacan dos subárboles de la pila de nodos y se crea un nuevo nodo interno:
 
 ```python
-@staticmethod
-def _reducir(pila_ops, pila_nodos):
-    operador = pila_ops.pop()
-    derecho = pila_nodos.pop()
-    izquierdo = pila_nodos.pop()
-    pila_nodos.push(Nodo(operador, izquierdo, derecho))
+def reducir(ops, nodos):
+    op = ops.pop()
+    der = nodos.pop()
+    izq = nodos.pop()
+    nodos.push(Nodo(op, izq, der))
 ```
 
 La regla de precedencia está en el `while` que decide cuándo reducir:
 
 ```python
-while (not pila_ops.esta_vacia() and pila_ops.tope() != '('
-       and (prioridad(pila_ops.tope()) > prioridad(valor)
-            or (prioridad(pila_ops.tope()) == prioridad(valor)
-                and valor != '^'))):
-    ArbolExpresion._reducir(pila_ops, pila_nodos)
+while ops.tope() not in (None, '(') and (
+        PRIORIDAD[ops.tope()] > PRIORIDAD[t] or
+        (PRIORIDAD[ops.tope()] == PRIORIDAD[t] and t != '^')):
+    reducir(ops, nodos)
 ```
 
 Durante la construcción se valida el orden de los tokens (por ejemplo, `3 4`, `3 +`, `()` o paréntesis sin cerrar generan `ErrorSintaxis`).
@@ -148,19 +140,16 @@ Durante la construcción se valida el orden de los tokens (por ejemplo, `3 4`, `
 Caso base: una hoja devuelve su número. Caso recursivo: se evalúan los hijos izquierdo y derecho y se aplica el operador del nodo.
 
 ```python
-def _evaluar(self, nodo):
-    if nodo.es_hoja():
-        return nodo.valor
-    izq = self._evaluar(nodo.izq)
-    der = self._evaluar(nodo.der)
-    op = nodo.valor
-    if op == '+':
-        return izq + der
+def evaluar(n):
+    if n.es_hoja():
+        return n.valor
+    a, b = evaluar(n.izq), evaluar(n.der)
+    if n.valor == '+': return a + b
     ...
-    if op == '/':
-        if der == 0:
+    if n.valor == '/':
+        if b == 0:
             raise ErrorMatematico("División por cero.")
-        return izq / der
+        return a / b
 ```
 
 ### 3.4 Recorridos
@@ -170,8 +159,8 @@ def _evaluar(self, nodo):
 ### 3.5 Visualización del árbol (`dibujar`)
 Dibuja el árbol en texto con la raíz arriba. Cada subárbol se dibuja recursivamente y luego se unen los dibujos izquierdo y derecho debajo del operador.
 
-### 3.6 Historial (`Historial`)
-Lista enlazada que inserta al inicio y, si hay más de 10 elementos, elimina el más antiguo. Solo se guardan las expresiones evaluadas correctamente.
+### 3.6 Historial (`historial`)
+Lista que inserta al inicio (`insert(0, ...)`) y, si hay más de 10 elementos, elimina los más antiguos (`del historial[10:]`). Solo se guardan las expresiones evaluadas correctamente.
 
 ### 3.7 Manejo de errores
 
@@ -208,13 +197,12 @@ Sea **n** la cantidad de tokens de la expresión y **h** la altura del árbol (e
 | Operación | Tiempo | Espacio extra | Justificación |
 |-----------|--------|---------------|---------------|
 | `push`, `pop`, `tope` (Pila) | O(1) | O(1) | Solo se modifica el nodo del tope. |
-| `encolar`, `desencolar` (Cola) | O(1) | O(1) | Se mantienen referencias al frente y al final. |
 | Tokenizar | O(n) | O(n) | Se recorre el texto una vez. |
 | Construir el árbol | O(n) | O(n) | Cada token se apila y se desapila a lo sumo una vez. |
 | Evaluar | O(n) | O(h) | Cada nodo se visita una sola vez; la pila de recursión llega hasta h. |
 | Recorrido inorder / postorder | O(n) | O(h) | Se visita cada nodo una vez (la concatenación de texto de Python puede añadir un costo menor, irrelevante para expresiones cortas). |
 | Dibujar el árbol | O(n · h), peor caso O(n²) | O(n · h) | Cada unión de subárboles recorre todas sus líneas. Solo se usa para mostrar. |
-| Historial: agregar | O(1) | O(1) | Inserción al inicio; el recorte recorre como máximo 10 nodos (constante). |
+| Historial: agregar | O(k), k ≤ 10 | O(1) | Insertar al inicio desplaza como máximo 10 elementos (constante en la práctica). |
 | Historial: mostrar | O(k), k ≤ 10 | O(1) | Se recorre la lista del historial. |
 
 **Total de una evaluación completa** (tokenizar + construir + evaluar): **O(n)**.
@@ -241,12 +229,12 @@ Resultado obtenido: **22/22 pruebas correctas**.
 6. Pruebas automáticas (`--pruebas`): `capturas/06_pruebas.png`
 
 
-![Menú](capturas/01_menu.png)
-![Evaluación](capturas/02_evaluacion.png)
-![Paréntesis y potencia](capturas/03_parentesis.png)
-![Errores](capturas/04_errores.png)
-![Historial](capturas/05_historial.png)
-![Pruebas](capturas/06_pruebas.png)
+![Menú](01_menu.png)
+![Evaluación](02_evaluacion.png)
+![Paréntesis y potencia](/03_parentesis.png)
+![Errores](04_errores.png)
+![Historial](05_historial.png)
+![Pruebas](06_pruebas.png)
 
 
 ---
@@ -257,6 +245,6 @@ Resultado obtenido: **22/22 pruebas correctas**.
 
 - El árbol de expresión representa la precedencia con su propia forma, así que la evaluación se reduce a una recursión sencilla.
 - Las pilas fueron clave para convertir la notación infija en árbol y manejar los paréntesis.
-- Implementar las estructuras desde cero (nodos, pila, cola y lista enlazada) permitió entender sus costos: todas las operaciones básicas son O(1) y una evaluación completa es O(n).
+- Implementar el árbol, los nodos y la pila desde cero permitió entender sus costos: las operaciones de la pila son O(1) y una evaluación completa es O(n).
 - Validar el orden de los tokens durante la construcción permitió detectar errores de sintaxis con mensajes claros, sin que el programa se caiga.
 - Posibles mejoras: soportar funciones (`sqrt`, `sin`), el menos unario antes de paréntesis (`-(3+2)`) y una visualización gráfica del árbol.
