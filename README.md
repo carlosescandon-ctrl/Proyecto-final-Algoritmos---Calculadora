@@ -219,7 +219,7 @@ Resultado obtenido: **22/22 pruebas correctas**.
 
 ## 6. Capturas de pantalla del programa en ejecución
 
-> **Pendiente del equipo:** ejecuten el programa, tomen las capturas y guárdenlas en una carpeta `capturas/` del repositorio con estos nombres.
+**Ejecución:** las capturas se encuentran en la carpeta `capturas/` del repositorio.
 
 1. Menú principal: `capturas/01_menu.png`
 2. Evaluación de `3 + 4 * 2` con árbol, recorridos y resultado: `capturas/02_evaluacion.png`
@@ -240,8 +240,6 @@ Resultado obtenido: **22/22 pruebas correctas**.
 ---
 
 ## 7. Conclusiones del equipo
-
-> Borrador: revísenlo y adáptenlo con sus propias palabras y lo que aprendieron.
 
 - El árbol de expresión representa la precedencia con su propia forma, así que la evaluación se reduce a una recursión sencilla.
 - Las pilas fueron clave para convertir la notación infija en árbol y manejar los paréntesis.
