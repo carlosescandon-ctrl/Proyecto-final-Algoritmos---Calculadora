@@ -229,12 +229,12 @@ Resultado obtenido: **22/22 pruebas correctas**.
 6. Pruebas automáticas (`--pruebas`): `capturas/06_pruebas.png`
 
 
-![Menú](01_menu.png)
-![Evaluación](02_evaluacion.png)
-![Paréntesis y potencia](/03_parentesis.png)
-![Errores](04_errores.png)
-![Historial](05_historial.png)
-![Pruebas](06_pruebas.png)
+![Menú](capturas/01_menu.png)
+![Evaluación](capturas/02_evaluacion.png)
+![Paréntesis y potencia](capturas/03_parentesis.png)
+![Errores](capturas/04_errores.png)
+![Historial](capturas/05_historial.png)
+![Pruebas](capturas/06_pruebas.png)
 
 
 ---
